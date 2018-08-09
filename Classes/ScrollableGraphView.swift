@@ -62,7 +62,7 @@ import UIKit
     
     // Reference Line Settings
     // #######################
-    
+
     var referenceLines: ReferenceLines? = nil
     
     // MARK: - Private State
@@ -87,6 +87,7 @@ import UIKit
     // Graph Drawing
     private var drawingView = UIView()
     private var plots: [Plot] = [Plot]()
+    private var axisLines: [AxisLine] = [AxisLine]()
     
     // Reference Lines
     private var referenceLineView: ReferenceLineDrawingView?
@@ -249,8 +250,17 @@ import UIKit
         if(referenceLines != nil) {
             addReferenceViewDrawingView()
         }
-        
+
         // 7.
+        // Add the plots to the graph, we need these to calculate the range.
+
+        while(queuedAxis.count > 0) {
+            if let axis = queuedAxis.dequeue() {
+                addAxisLinesToGraph(axisLine: axis)
+            }
+        }
+
+        // 8.
         // We're now done setting up, update the offsets and change the flag.
         
         updateOffsetWidths()
@@ -445,7 +455,15 @@ import UIKit
             addPlotToGraph(plot: plot, activePointsInterval: self.activePointsInterval)
         }
     }
-    
+
+    public func addAxisLine(axisLine: AxisLine) {
+        if(isInitialSetup) {
+            enqueueAxis(axisLine)
+        }else {
+            addAxisLinesToGraph(axisLine: axisLine)
+        }
+    }
+
     public func addReferenceLines(referenceLines: ReferenceLines) {
         
         // If we aren't setup yet, just save the reference lines and the setup will take care of it.
@@ -481,11 +499,18 @@ import UIKit
         initPlot(plot: plot, activePointsInterval: activePointsInterval)
         startAnimations(withStaggerValue: 0.15)
     }
-    
+
+    private func addAxisLinesToGraph(axisLine: AxisLine) {
+        axisLine.graphViewDrawingDelegate = self
+        self.axisLines.append(axisLine)
+        axisLine.setup()
+        addSubLayers(layers: axisLine.layers(forViewport: currentViewport()))
+    }
+
     private func addReferenceLinesToGraph(referenceLines: ReferenceLines) {
         self.referenceLines = referenceLines
         addReferenceViewDrawingView()
-        
+
         updateLabelsForCurrentInterval()
     }
     
@@ -507,9 +532,13 @@ import UIKit
     }
 
     private var queuedPlots: SGVQueue<Plot> = SGVQueue<Plot>()
-    
+    private var queuedAxis: SGVQueue<AxisLine> = SGVQueue<AxisLine>()
+
     private func enqueuePlot(_ plot: Plot) {
         queuedPlots.enqueue(element: plot)
+    }
+    private func enqueueAxis(_ axis: AxisLine) {
+        queuedAxis.enqueue(element: axis)
     }
 
     
@@ -878,7 +907,39 @@ import UIKit
     
     // MARK: - Drawing Delegate
     // ########################
-    
+
+    internal func calculateAxisPositionForRelativeLabels(atIndex index: Int) -> [(point: GraphPoint, value: Double)]? {
+        // Make sure we have data, if don't, just get out. We can't do anything without any data.
+        guard let dataSource = dataSource else {
+            return nil
+        }
+        var points = [(point: GraphPoint, value: Double)]()
+        for plot in plots {
+            if !(plot is DotPlot) {
+                if let point = plot.graphPoint(forIndex: index) {
+                    points.append((point:point, value: dataSource.value(forPlot: plot, atIndex: index)))
+                }
+            }
+        }
+        return points
+    }
+
+    internal func calculateAxisPosition(atIndex index: Int) -> (start:CGPoint, end:CGPoint) {
+
+        // Calculate the position on in the view for the value specified.
+        var graphHeight = viewportHeight - topMargin - bottomMargin
+        if let ref = self.referenceLines {
+            if(ref.shouldShowLabels && ref.dataPointLabelFont != nil) {
+                graphHeight -= (ref.dataPointLabelFont!.pointSize + ref.dataPointLabelTopMargin + ref.dataPointLabelBottomMargin)
+            }
+        }
+
+        let x = (CGFloat(index) * dataPointSpacing) + leftmostPointPadding
+        let y = topMargin + graphHeight
+
+        return (CGPoint(x: x, y: topMargin),CGPoint(x: x, y: y))
+    }
+
     internal func calculatePosition(atIndex index: Int, value: Double) -> CGPoint {
         
         // Set range defaults based on settings:

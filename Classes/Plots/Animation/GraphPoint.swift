@@ -1,6 +1,6 @@
 import UIKit
 
-internal class GraphPoint {
+public class GraphPoint {
     
     var location = CGPoint(x: 0, y: 0)
     var currentlyAnimatingToPosition = false

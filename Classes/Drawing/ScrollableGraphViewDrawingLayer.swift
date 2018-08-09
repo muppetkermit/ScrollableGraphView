@@ -13,7 +13,7 @@ internal class ScrollableGraphViewDrawingLayer : CAShapeLayer {
     var viewportHeight: CGFloat = 0
     var zeroYPosition: CGFloat = 0
     
-    weak var owner: Plot?
+    weak var owner: GraphPlot?
     
     var active = true
     

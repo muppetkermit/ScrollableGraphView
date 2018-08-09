@@ -113,9 +113,26 @@ class ViewController: UIViewController, ScrollableGraphViewDataSource {
         let graphView = ScrollableGraphView(frame: frame, dataSource: self)
         
         let linePlot = LinePlot(identifier: "simple") // Identifier should be unique for each plot.
+
+        // Setup the second plot.
+        let orangeLinePlot = LinePlot(identifier: "multiOrange")
+
+        orangeLinePlot.lineColor = UIColor.colorFromHex(hexString: "#ff7d78")
+        orangeLinePlot.adaptAnimationType = ScrollableGraphViewAnimationType.elastic
+
+        // squares on the line
+        let orangeSquarePlot = DotPlot(identifier: "multiOrangeSquare")
+        orangeSquarePlot.dataPointType = ScrollableGraphViewDataPointType.square
+        orangeSquarePlot.dataPointSize = 5
+        orangeSquarePlot.dataPointFillColor = UIColor.colorFromHex(hexString: "#ff7d78")
+
+        orangeSquarePlot.adaptAnimationType = ScrollableGraphViewAnimationType.elastic
+
         let referenceLines = ReferenceLines()
-        
+//        referenceLines.shouldShowLabels = false
+
         graphView.addPlot(plot: linePlot)
+        graphView.addPlot(plot: orangeLinePlot)
         graphView.addReferenceLines(referenceLines: referenceLines)
         
         return graphView
