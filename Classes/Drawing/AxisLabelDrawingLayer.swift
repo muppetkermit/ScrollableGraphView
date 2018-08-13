@@ -18,21 +18,17 @@ internal class AxisLabelDrawingLayer: ScrollableGraphViewDrawingLayer {
     private var labelColor: UIColor = UIColor.black
     private var labelFont: UIFont = UIFont.systemFont(ofSize: 10)
     private var lineIndex: Int = 0
-    private var prefixText: String = ""
-    private var suffixText: String = ""
 
     private var labels = [UILabel]()
-    private var labelTexts = [String]()
+    private var labelTexts = [LabelInfo]()
 
-    init(frame: CGRect, labels:[String], lineIndex: Int, color: UIColor, font: UIFont, position: ScrollableGraphViewAxisLabelPosition = .topLeft, prefixText: String = "", suffixText: String = "") {
+    init(frame: CGRect, labels:[LabelInfo], lineIndex: Int, color: UIColor, font: UIFont, position: ScrollableGraphViewAxisLabelPosition = .topLeft) {
         super.init(viewportWidth: frame.size.width, viewportHeight: frame.size.height)
-
-        self.labelTexts = labels
+        
         self.labelPosition = position
         self.lineIndex = lineIndex
 
-        self.prefixText = prefixText
-        self.suffixText = suffixText
+        self.labelTexts = labels
 
         generateLabels()
     }
@@ -47,27 +43,20 @@ internal class AxisLabelDrawingLayer: ScrollableGraphViewDrawingLayer {
                 return
         }
 
-        var keyPoints: [(point: GraphPoint, value: Double)]?
         switch labelPosition {
         case .relativeLeft, .relativeRight:
-            keyPoints = owner?.graphKeyPoints(forIndex: lineIndex)
-            if let points = keyPoints {
-                labelTexts.removeAll()
-                for point in points {
-                    labelTexts.append("\(point.value)")
-                }
-                if labelTexts.count != labels.count {
-                    generateLabels()
-                }
+            labelTexts = owner?.graphKeyPoints(forIndex: lineIndex) ?? []
+            if labelTexts.count != labels.count {
+                generateLabels()
             }
         default:
             break
         }
 
         for index in 0..<labelTexts.count {
-            let text = labelTexts[index]
+            let text = labelTexts[index].text
             let label = labels[index]
-            let y = (index < (keyPoints?.count ?? 0)) ? CGFloat(keyPoints?[index].point.y ?? 0) : 0
+            let y = CGFloat(labelTexts[index].point.y)
             label.layer.frame = findLabelPosition(forText: text, startPoint: startPoint, endPoint: endPoint, relativeY: y)
         }
     }
@@ -82,8 +71,8 @@ internal class AxisLabelDrawingLayer: ScrollableGraphViewDrawingLayer {
             label.layer.removeFromSuperlayer()
         }
         labels = []
-        for text in labelTexts {
-            let label = createLabel(withText: text)
+        for info in labelTexts {
+            let label = createLabel(withText: info.text)
             self.addSublayer(label.layer)
             labels.append(label)
         }
@@ -91,7 +80,7 @@ internal class AxisLabelDrawingLayer: ScrollableGraphViewDrawingLayer {
 
     private func createLabel(withText text: String) -> UILabel {
         let label = UILabel()
-        label.text = prefixText + text + suffixText
+        label.text = text
         label.textColor = labelColor
         label.font = labelFont
         return label
@@ -120,7 +109,7 @@ internal class AxisLabelDrawingLayer: ScrollableGraphViewDrawingLayer {
     }
 
     private func boundingSize(forText text: String) -> CGSize {
-        return (prefixText + text + suffixText as NSString).size(withAttributes: [NSAttributedStringKey.font:labelFont])
+        return (text as NSString).size(withAttributes: [NSAttributedStringKey.font:labelFont])
     }
 
 }

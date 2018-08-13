@@ -7,6 +7,7 @@ import UIKit
 
 class ViewController: UIViewController, ScrollableGraphViewDataSource {
 
+
     var graphView: ScrollableGraphView!
     var currentGraphType = GraphType.multiOne
     var graphConstraints = [NSLayoutConstraint]()
@@ -51,6 +52,10 @@ class ViewController: UIViewController, ScrollableGraphViewDataSource {
     
     // Implementation for ScrollableGraphViewDataSource protocol
     // #########################################################
+
+    func label(forPlot plot: Plot, atIndex pointIndex: Int) -> LabelInfo? {
+        return nil
+    }
     
     // You would usually only have a couple of cases here, one for each
     // plot you want to display on the graph. However as this is showing

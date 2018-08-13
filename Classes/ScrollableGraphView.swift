@@ -778,6 +778,15 @@ import UIKit
             
             // The labels will also need to be repositioned if the viewport has changed.
             repositionActiveLabels()
+
+            // Scale Axis lines for new viewPort
+            repositionAxisLines()
+        }
+    }
+
+    private func repositionAxisLines() {
+        for line in axisLines {
+            line.updateLineLayer()
         }
     }
     
@@ -908,23 +917,21 @@ import UIKit
     // MARK: - Drawing Delegate
     // ########################
 
-    internal func calculateAxisPositionForRelativeLabels(atIndex index: Int) -> [(point: GraphPoint, value: Double)]? {
+    internal func calculateAxisPositionForRelativeLabels(atIndex index: Int) -> [LabelInfo] {
         // Make sure we have data, if don't, just get out. We can't do anything without any data.
         guard let dataSource = dataSource else {
-            return nil
+            return []
         }
-        var points = [(point: GraphPoint, value: Double)]()
+        var infos = [LabelInfo]()
         for plot in plots {
-            if !(plot is DotPlot) {
-                if let point = plot.graphPoint(forIndex: index) {
-                    points.append((point:point, value: dataSource.value(forPlot: plot, atIndex: index)))
-                }
+            if let info = dataSource.label(forPlot: plot, atIndex: index) {
+                infos.append(info)
             }
         }
-        return points
+        return infos
     }
 
-    internal func calculateAxisPosition(atIndex index: Int) -> (start:CGPoint, end:CGPoint) {
+    internal func calculateAxisPosition(atIndex index: Int, lineType: AxisLinePositioningType = .relative) -> (start:CGPoint, end:CGPoint) {
 
         // Calculate the position on in the view for the value specified.
         var graphHeight = viewportHeight - topMargin - bottomMargin
@@ -932,6 +939,10 @@ import UIKit
             if(ref.shouldShowLabels && ref.dataPointLabelFont != nil) {
                 graphHeight -= (ref.dataPointLabelFont!.pointSize + ref.dataPointLabelTopMargin + ref.dataPointLabelBottomMargin)
             }
+        }
+
+        if case AxisLinePositioningType.absolute = lineType {
+            return (CGPoint(x: leftmostPointPadding, y: topMargin),CGPoint(x: rightmostPointPadding, y: topMargin + graphHeight))
         }
 
         let x = (CGFloat(index) * dataPointSpacing) + leftmostPointPadding

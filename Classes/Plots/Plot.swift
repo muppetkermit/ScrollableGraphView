@@ -4,7 +4,7 @@ import UIKit
 protocol GraphPlot: class {
     func graphPoint(forIndex index: Int) -> GraphPoint?
     func graphMove() -> GraphPoint?
-    func graphKeyPoints(forIndex index: Int) -> [(point: GraphPoint, value: Double)]?
+    func graphKeyPoints(forIndex index: Int) -> [LabelInfo]
     var graphViewDrawingDelegate: ScrollableGraphViewDrawingDelegate! {get set}
 }
 
@@ -241,8 +241,8 @@ open class Plot: GraphPlot {
         return graphPoints[index]
     }
 
-    internal func graphKeyPoints(forIndex index: Int) -> [(point: GraphPoint, value: Double)]? {
-        return nil
+    internal func graphKeyPoints(forIndex index: Int) -> [LabelInfo] {
+        return []
     }
 
     // move path for single lines.

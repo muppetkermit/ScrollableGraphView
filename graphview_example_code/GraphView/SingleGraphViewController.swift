@@ -48,7 +48,6 @@ class SingleGraphViewController: UIViewController {
         let axisLine1 = AxisLine()
         axisLine1.axisLineIndex = 10
         axisLine1.labelText = "Lap 1"
-        axisLine1.suffixText = " km/h"
         axisLine1.axisLabelPosition = .relativeRight
         let axisLine2 = AxisLine()
         axisLine2.axisLineIndex = 30
@@ -111,6 +110,29 @@ class SingleGraphViewController: UIViewController {
 }
 
 extension SingleGraphViewController: ScrollableGraphViewDataSource {
+
+    func label(forPlot plot: Plot, atIndex pointIndex: Int) -> LabelInfo? {
+        guard let point = plot.graphPoint(forIndex: pointIndex) else {
+            return nil
+        }
+        var suffix = ""
+        var style = LabelInfo.Style(cornerType: .normal, backgroundColor: UIColor.black, labelColor: UIColor.white)
+        switch plot.identifier {
+        case "black":
+            suffix = " km/h"
+        case "green":
+            suffix = "%"
+            style = LabelInfo.Style(cornerType: .rounded(radius: 4), backgroundColor: UIColor.green, labelColor: UIColor.white)
+        default:
+            break
+        }
+
+        let value = self.value(forPlot: plot, atIndex: pointIndex)
+        return LabelInfo(text: "\(value)\(suffix)",
+                            value: value,
+                            style: style,
+                            point: point.location)
+    }
 
     func value(forPlot plot: Plot, atIndex pointIndex: Int) -> Double {
         switch(plot.identifier) {

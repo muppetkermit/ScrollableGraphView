@@ -36,8 +36,11 @@ open class AxisLine: GraphPlot {
             }
         }
     }
-    /// Where the labels should be displayed on the reference lines.
+    /// How the axis line should be displayed on the graph
     open var axisLinePosition = AxisLinePositioningType.relative
+
+    /// axis line absolute position ratio
+    @IBInspectable var axisLineAbsoluteRatio: Double = 0.5
 
     /// How each segment in the line should connect. Takes any of the Core Animation LineJoin values.
     open var lineJoin: String = kCALineJoinRound
@@ -57,10 +60,10 @@ open class AxisLine: GraphPlot {
 
     /// Text for the labels on the x-axis.
     @IBInspectable open var labelText: String = "Axis"
-    /// Prefix for the labels on the x-axis.
-    @IBInspectable open var prefixText: String = ""
-    /// Suffix for the labels on the x-axis.
-    @IBInspectable open var suffixText: String = ""
+    public var labelInfo = LabelInfo(text: "",
+                                     value: 0,
+                                     style: LabelInfo.Style(cornerType: .normal, backgroundColor: UIColor.clear, labelColor: UIColor.black),
+                                     point: CGPoint.zero)
 
     @IBInspectable var axisLabelPosition_: Int {
         get { return axisLabelPosition.rawValue }
@@ -91,10 +94,20 @@ open class AxisLine: GraphPlot {
         createAxisPoints()
     }
 
+    func updateLineLayer() {
+        createAxisPoints()
+        _ = lineLayer?.createLinePath()
+    }
+
     private func createAxisPoints() {
-        let positions = graphViewDrawingDelegate.calculateAxisPosition(atIndex: axisLineIndex)
-        graphPoints.append(GraphPoint(position: positions.start))
-        graphPoints.append(GraphPoint(position: positions.end))
+        let positions = graphViewDrawingDelegate.calculateAxisPosition(atIndex: axisLineIndex, lineType: axisLinePosition)
+
+        if case AxisLinePositioningType.absolute = axisLinePosition {
+            let x = (positions.end.x - positions.start.x) * CGFloat(axisLineAbsoluteRatio)
+            graphPoints = [GraphPoint(position: CGPoint(x: x, y: positions.start.y)), GraphPoint(position: CGPoint(x: x, y: positions.end.y))]
+        } else {
+            graphPoints = [GraphPoint(position: positions.start), GraphPoint(position: positions.end)]
+        }
     }
 
     private func createLayers(viewport: CGRect) {
@@ -103,12 +116,13 @@ open class AxisLine: GraphPlot {
         lineLayer?.owner = self
 
         if shouldShowLabels {
-            labelLayer = AxisLabelDrawingLayer(frame: viewport, labels: [labelText], lineIndex: axisLineIndex, color: dataPointLabelColor, font: dataPointLabelFont, position: axisLabelPosition, prefixText: prefixText, suffixText: suffixText)
+            labelInfo.text = labelText
+            labelLayer = AxisLabelDrawingLayer(frame: viewport, labels:[labelInfo] , lineIndex: axisLineIndex, color: dataPointLabelColor, font: dataPointLabelFont, position: axisLabelPosition)
             labelLayer?.owner = self
         }
     }
 
-    internal func graphKeyPoints(forIndex index: Int) -> [(point: GraphPoint, value: Double)]? {
+    internal func graphKeyPoints(forIndex index: Int) -> [LabelInfo] {
         return graphViewDrawingDelegate.calculateAxisPositionForRelativeLabels(atIndex: index)
     }
 
