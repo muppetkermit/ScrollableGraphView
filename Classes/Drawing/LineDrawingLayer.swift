@@ -46,8 +46,12 @@ internal class LineDrawingLayer : ScrollableGraphViewDrawingLayer {
         
         let pathSegmentAdder = lineStyle == .straight ? addStraightLineSegment : addCurvedLineSegment
         
-        let activePointsInterval = delegate.intervalForActivePoints()
-        
+        var activePointsInterval = delegate.intervalForActivePoints()
+
+        if case LinePositioningType.absolute = linePositionType {
+            activePointsInterval = delegate.intervalForAbsolutePoints()
+        }
+
         let pointPadding = delegate.paddingForPoints()
         
         let min = delegate.rangeForActivePoints().min
@@ -81,6 +85,7 @@ internal class LineDrawingLayer : ScrollableGraphViewDrawingLayer {
             }
         }
 
+        print("bounds: ",activePointsInterval.lowerBound,activePointsInterval.upperBound)
         // Connect each point on the graph with a segment.
         for i in activePointsInterval.lowerBound ..< activePointsInterval.upperBound {
 
@@ -88,7 +93,7 @@ internal class LineDrawingLayer : ScrollableGraphViewDrawingLayer {
                 let endPoint = owner.graphPoint(forIndex: i+1)?.location else {
                 continue
             }
-
+            print(startPoint, endPoint)
             pathSegmentAdder(startPoint, endPoint, currentLinePath)
         }
 

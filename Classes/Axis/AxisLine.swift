@@ -31,13 +31,13 @@ open class AxisLine: GraphPlot {
     @IBInspectable var axisLinePosition_: Int {
         get { return axisLinePosition.rawValue }
         set {
-            if let enumValue = AxisLinePositioningType(rawValue: newValue) {
+            if let enumValue = LinePositioningType(rawValue: newValue) {
                 axisLinePosition = enumValue
             }
         }
     }
     /// How the axis line should be displayed on the graph
-    open var axisLinePosition = AxisLinePositioningType.relative
+    open var axisLinePosition = LinePositioningType.relative
 
     /// axis line absolute position ratio
     @IBInspectable var axisLineAbsoluteRatio: Double = 0.5
@@ -101,9 +101,8 @@ open class AxisLine: GraphPlot {
 
     private func createAxisPoints() {
         let positions = graphViewDrawingDelegate.calculateAxisPosition(atIndex: axisLineIndex, lineType: axisLinePosition)
-
-        if case AxisLinePositioningType.absolute = axisLinePosition {
-            let x = (positions.end.x - positions.start.x) * CGFloat(axisLineAbsoluteRatio)
+        if case LinePositioningType.absolute = axisLinePosition {
+            let x = (positions.end.x + positions.start.x) * CGFloat(axisLineAbsoluteRatio)
             graphPoints = [GraphPoint(position: CGPoint(x: x, y: positions.start.y)), GraphPoint(position: CGPoint(x: x, y: positions.end.y))]
         } else {
             graphPoints = [GraphPoint(position: positions.start), GraphPoint(position: positions.end)]
@@ -113,11 +112,13 @@ open class AxisLine: GraphPlot {
     private func createLayers(viewport: CGRect) {
         // Create the line drawing layer.
         lineLayer = LineDrawingLayer(frame: viewport, lineWidth: axisLineThickness, lineColor: axisLineColor, lineStyle: ScrollableGraphViewLineStyle.straight)
+        lineLayer?.linePositionType = axisLinePosition
         lineLayer?.owner = self
 
         if shouldShowLabels {
             labelInfo.text = labelText
             labelLayer = AxisLabelDrawingLayer(frame: viewport, labels:[labelInfo] , lineIndex: axisLineIndex, color: dataPointLabelColor, font: dataPointLabelFont, position: axisLabelPosition)
+            labelLayer?.linePositionType = axisLinePosition
             labelLayer?.owner = self
         }
     }
@@ -139,11 +140,6 @@ open class AxisLine: GraphPlot {
         return graphPoints[0]
     }
     
-}
-
-@objc public enum AxisLinePositioningType : Int {
-    case relative
-    case absolute
 }
 
 @objc public enum ScrollableGraphViewAxisLabelPosition : Int {

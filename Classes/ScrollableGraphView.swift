@@ -22,7 +22,7 @@ import UIKit
     /// How far the "minimum" reference line is from the bottom of the view's frame. In points.
     @IBInspectable open var bottomMargin: CGFloat = 10
     /// How far the first point on the graph should be placed from the left hand side of the view.
-    @IBInspectable open var leftmostPointPadding: CGFloat = 50
+    @IBInspectable open var leftmostPointPadding: CGFloat = 350
     /// How far the final point on the graph should be placed from the right hand side of the view.
     @IBInspectable open var rightmostPointPadding: CGFloat = 50
     /// How much space should be between each data point.
@@ -392,12 +392,27 @@ import UIKit
     private func updateOffsetWidths() {
         drawingView.frame.origin.x = offsetWidth
         drawingView.bounds.origin.x = offsetWidth
-        
+
+        updateAbsoluteFrames(offsetWidth: offsetWidth)
         updateOffsetsForGradients(offsetWidth: offsetWidth)
         
         referenceLineView?.frame.origin.x = offsetWidth
     }
-    
+
+    private func updateAbsoluteFrames(offsetWidth: CGFloat) {
+        guard let sublayers = drawingView.layer.sublayers else {
+            return
+        }
+
+        for layer in sublayers {
+            if let layer = layer as? ScrollableGraphViewDrawingLayer {
+                if case LinePositioningType.absolute = layer.linePositionType {
+                    layer.absoluteOffset = offsetWidth
+                }
+            }
+        }
+    }
+
     private func updateOffsetsForGradients(offsetWidth: CGFloat) {
         guard let sublayers = drawingView.layer.sublayers else {
             return
@@ -923,15 +938,19 @@ import UIKit
             return []
         }
         var infos = [LabelInfo]()
+
+//        let max = Int(((offsetWidth + viewportWidth)) / dataPointSpacing)
+        let offSetIndex = Int((offsetWidth) / dataPointSpacing)
+        print("offsets ",index, offSetIndex)
         for plot in plots {
-            if let info = dataSource.label(forPlot: plot, atIndex: index) {
+            if let info = dataSource.label(forPlot: plot, atIndex: index + offSetIndex) {
                 infos.append(info)
             }
         }
         return infos
     }
 
-    internal func calculateAxisPosition(atIndex index: Int, lineType: AxisLinePositioningType = .relative) -> (start:CGPoint, end:CGPoint) {
+    internal func calculateAxisPosition(atIndex index: Int, lineType: LinePositioningType = .relative) -> (start:CGPoint, end:CGPoint) {
 
         // Calculate the position on in the view for the value specified.
         var graphHeight = viewportHeight - topMargin - bottomMargin
@@ -941,8 +960,8 @@ import UIKit
             }
         }
 
-        if case AxisLinePositioningType.absolute = lineType {
-            return (CGPoint(x: leftmostPointPadding, y: topMargin),CGPoint(x: rightmostPointPadding, y: topMargin + graphHeight))
+        if case LinePositioningType.absolute = lineType {
+            return (CGPoint(x: leftmostPointPadding, y: topMargin),CGPoint(x: viewportWidth - rightmostPointPadding, y: topMargin + graphHeight))
         }
 
         let x = (CGFloat(index) * dataPointSpacing) + leftmostPointPadding
@@ -982,7 +1001,23 @@ import UIKit
         
         return CGPoint(x: x, y: y)
     }
-    
+
+    internal func intervalForAbsolutePoints() -> CountableRange<Int> {
+        var lowerbound = Int.max
+        var upperbound = Int.min
+        for line in self.axisLines {
+            if case LinePositioningType.absolute = line.axisLinePosition {
+                if (lowerbound > line.axisLineIndex) {
+                    lowerbound = line.axisLineIndex
+                }
+                if (upperbound < line.axisLineIndex) {
+                    upperbound = line.axisLineIndex + 1
+                }
+            }
+        }
+        return lowerbound ..< upperbound
+    }
+
     internal func intervalForActivePoints() -> CountableRange<Int> {
         return activePointsInterval
     }

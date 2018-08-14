@@ -6,6 +6,7 @@ protocol GraphPlot: class {
     func graphMove() -> GraphPoint?
     func graphKeyPoints(forIndex index: Int) -> [LabelInfo]
     var graphViewDrawingDelegate: ScrollableGraphViewDrawingDelegate! {get set}
+    var identifier: String! {get set}
 }
 
 open class Plot: GraphPlot {
@@ -235,7 +236,7 @@ open class Plot: GraphPlot {
     }
     
     internal func graphPoint(forIndex index: Int) -> GraphPoint? {
-        if index >= graphPoints.count {
+        if index >= graphPoints.count || index < 0 {
             return nil
         }
         return graphPoints[index]

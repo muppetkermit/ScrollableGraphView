@@ -195,7 +195,7 @@ class ViewController: UIViewController, ScrollableGraphViewDataSource {
         graphView.dataPointSpacing = 80
         
         graphView.shouldAnimateOnStartup = true
-        graphView.shouldAdaptRange = true
+//        graphView.shouldAdaptRange = true
         graphView.shouldRangeAlwaysStartAtZero = true
         
         // Add everything to the graph.

@@ -28,12 +28,12 @@ class SingleGraphViewController: UIViewController {
         // and reference lines before adding the graph to the view hierarchy.
         let graphView = ScrollableGraphView(frame: frame, dataSource: self)
 
-        let linePlot = LinePlot(identifier: "black") // Identifier should be unique for each plot.
+        let linePlot = DotPlot(identifier: "black") // Identifier should be unique for each plot.
 
         // Setup the second plot.
-        let orangeLinePlot = LinePlot(identifier: "green")
+        let orangeLinePlot = DotPlot(identifier: "green")
 
-        orangeLinePlot.lineColor = UIColor.colorFromHex(hexString: "#71D637")
+//        orangeLinePlot.lineColor = UIColor.colorFromHex(hexString: "#71D637")
         orangeLinePlot.adaptAnimationType = ScrollableGraphViewAnimationType.elastic
 
         // squares on the line
@@ -49,13 +49,14 @@ class SingleGraphViewController: UIViewController {
         axisLine1.axisLineIndex = 10
         axisLine1.labelText = "Lap 1"
         axisLine1.axisLabelPosition = .relativeRight
+        axisLine1.axisLinePosition = .absolute
         let axisLine2 = AxisLine()
         axisLine2.axisLineIndex = 30
         axisLine2.labelText = "⭐️ Lap 2"
         axisLine2.axisLabelPosition = .topRight
         
 
-//        graphView.shouldAnimateOnStartup = false
+        graphView.shouldAnimateOnStartup = false
         graphView.addPlot(plot: linePlot)
         graphView.addPlot(plot: orangeLinePlot)
         graphView.addAxisLine(axisLine: axisLine1)
@@ -88,8 +89,8 @@ class SingleGraphViewController: UIViewController {
     }
 
     // Data for graphs with a single plot
-    lazy var simpleLinePlotData: [Double] = self.generateRandomData(50, max: 100, shouldIncludeOutliers: false)
-    lazy var orangeLinePlotData: [Double] =  self.generateRandomData(50, max: 40, shouldIncludeOutliers: true)
+    lazy var simpleLinePlotData: [Double] = self.generateRandomData(60, max: 100, shouldIncludeOutliers: false)
+    lazy var orangeLinePlotData: [Double] =  self.generateRandomData(60, max: 40, shouldIncludeOutliers: true)
 
     // Data Generation
     private func generateRandomData(_ numberOfItems: Int, max: Double, shouldIncludeOutliers: Bool = true) -> [Double] {
@@ -151,7 +152,7 @@ extension SingleGraphViewController: ScrollableGraphViewDataSource {
     }
 
     func numberOfPoints() -> Int {
-        return 50
+        return 60
     }
 
 }
