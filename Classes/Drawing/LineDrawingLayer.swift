@@ -85,7 +85,6 @@ internal class LineDrawingLayer : ScrollableGraphViewDrawingLayer {
             }
         }
 
-        print("bounds: ",activePointsInterval.lowerBound,activePointsInterval.upperBound)
         // Connect each point on the graph with a segment.
         for i in activePointsInterval.lowerBound ..< activePointsInterval.upperBound {
 
@@ -93,7 +92,6 @@ internal class LineDrawingLayer : ScrollableGraphViewDrawingLayer {
                 let endPoint = owner.graphPoint(forIndex: i+1)?.location else {
                 continue
             }
-            print(startPoint, endPoint)
             pathSegmentAdder(startPoint, endPoint, currentLinePath)
         }
 

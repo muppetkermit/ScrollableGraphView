@@ -22,9 +22,9 @@ import UIKit
     /// How far the "minimum" reference line is from the bottom of the view's frame. In points.
     @IBInspectable open var bottomMargin: CGFloat = 10
     /// How far the first point on the graph should be placed from the left hand side of the view.
-    @IBInspectable open var leftmostPointPadding: CGFloat = 350
+    @IBInspectable open var leftmostPointPadding: CGFloat = 50
     /// How far the final point on the graph should be placed from the right hand side of the view.
-    @IBInspectable open var rightmostPointPadding: CGFloat = 50
+    @IBInspectable open var rightmostPointPadding: CGFloat = 350
     /// How much space should be between each data point.
     @IBInspectable open var dataPointSpacing: CGFloat = 40
     
@@ -109,8 +109,18 @@ import UIKit
     private var previousActivePointsInterval: CountableRange<Int> = -1 ..< -1
     private var activePointsInterval: CountableRange<Int> = -1 ..< -1 {
         didSet {
-            if(oldValue.lowerBound != activePointsInterval.lowerBound || oldValue.upperBound != activePointsInterval.upperBound) {
+            if actualPointsIntervalChanged {
+                actualPointsIntervalChanged = false
                 if !isCurrentlySettingUp { activePointsDidChange() }
+            }
+        }
+    }
+    
+    private var actualPointsIntervalChanged: Bool = false
+    private var actualPointsInterval: CountableRange<Int> = -1 ..< -1 {
+        didSet {
+            if(oldValue.lowerBound != actualPointsInterval.lowerBound || oldValue.upperBound != actualPointsInterval.upperBound) {
+                actualPointsIntervalChanged = true
             }
         }
     }
@@ -566,9 +576,17 @@ import UIKit
     private func calculateActivePointsInterval() -> CountableRange<Int> {
         
         // Calculate the "active points"
-        let min = Int((offsetWidth) / dataPointSpacing)
-        let max = Int(((offsetWidth + viewportWidth)) / dataPointSpacing)
-        
+        let min = Int(Double((offsetWidth - leftmostPointPadding) / dataPointSpacing).rounded())
+        let max = Int(Double(((offsetWidth + viewportWidth)) / dataPointSpacing).rounded())
+        print("-----")
+        print(offsetWidth - leftmostPointPadding)
+        print(dataPointSpacing)
+        print((offsetWidth - leftmostPointPadding) / dataPointSpacing)
+        print(min)
+        print("--+++--")
+        print(((offsetWidth + viewportWidth)) / dataPointSpacing)
+        print(max)
+        print("****")
         // Add and minus two so the path goes "off the screen" so we can't see where it ends.
         let minPossible = 0
         var maxPossible = 0
@@ -576,12 +594,13 @@ import UIKit
         if let numberOfPoints = dataSource?.numberOfPoints() {
             maxPossible = numberOfPoints - 1
         }
-        
+
+        actualPointsInterval = min ..< max
         let numberOfPointsOffscreen = 2
-        
         let actualMin = clamp(value: min - numberOfPointsOffscreen, min: minPossible, max: maxPossible)
         let actualMax = clamp(value: max + numberOfPointsOffscreen, min: minPossible, max: maxPossible)
-        
+        print("pp: \(minPossible) \(maxPossible)")
+        print("MIN: \(min) \(max) actial: \(actualMin) \(actualMax)")
         return actualMin..<actualMax.advanced(by: 1)
     }
     
@@ -932,18 +951,17 @@ import UIKit
     // MARK: - Drawing Delegate
     // ########################
 
-    internal func calculateAxisPositionForRelativeLabels(atIndex index: Int) -> [LabelInfo] {
+    internal func calculateAxisPositionForRelativeLabels(atIndex index: Int, axisLineAbsoluteRatio: CGFloat = 0) -> [LabelInfo] {
         // Make sure we have data, if don't, just get out. We can't do anything without any data.
         guard let dataSource = dataSource else {
             return []
         }
         var infos = [LabelInfo]()
 
-//        let max = Int(((offsetWidth + viewportWidth)) / dataPointSpacing)
-        let offSetIndex = Int((offsetWidth) / dataPointSpacing)
-        print("offsets ",index, offSetIndex)
+        let offSetIndex = Int(Double((offsetWidth - leftmostPointPadding + viewportWidth * axisLineAbsoluteRatio) / dataPointSpacing).rounded())
+        print("offsets ",index, offSetIndex, offsetWidth)
         for plot in plots {
-            if let info = dataSource.label(forPlot: plot, atIndex: index + offSetIndex) {
+            if let info = dataSource.label(forPlot: plot, atIndex: offSetIndex) {
                 infos.append(info)
             }
         }
@@ -961,7 +979,7 @@ import UIKit
         }
 
         if case LinePositioningType.absolute = lineType {
-            return (CGPoint(x: leftmostPointPadding, y: topMargin),CGPoint(x: viewportWidth - rightmostPointPadding, y: topMargin + graphHeight))
+            return (CGPoint(x: 0, y: topMargin),CGPoint(x: viewportWidth, y: topMargin + graphHeight))
         }
 
         let x = (CGFloat(index) * dataPointSpacing) + leftmostPointPadding
@@ -998,7 +1016,7 @@ import UIKit
         
         let x = (CGFloat(index) * dataPointSpacing) + leftmostPointPadding
         let y = (CGFloat((value - rangeMax) / (rangeMin - rangeMax)) * graphHeight) + topMargin
-        
+        print("Dot: ",x,y)
         return CGPoint(x: x, y: y)
     }
 

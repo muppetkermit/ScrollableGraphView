@@ -31,9 +31,9 @@ class SingleGraphViewController: UIViewController {
         let linePlot = DotPlot(identifier: "black") // Identifier should be unique for each plot.
 
         // Setup the second plot.
-        let orangeLinePlot = DotPlot(identifier: "green")
+        let orangeLinePlot = LinePlot(identifier: "green")
 
-//        orangeLinePlot.lineColor = UIColor.colorFromHex(hexString: "#71D637")
+        orangeLinePlot.lineColor = UIColor.colorFromHex(hexString: "#71D637")
         orangeLinePlot.adaptAnimationType = ScrollableGraphViewAnimationType.elastic
 
         // squares on the line
@@ -50,12 +50,14 @@ class SingleGraphViewController: UIViewController {
         axisLine1.labelText = "Lap 1"
         axisLine1.axisLabelPosition = .relativeRight
         axisLine1.axisLinePosition = .absolute
+        axisLine1.axisLineAbsoluteRatio = 0.5
+
         let axisLine2 = AxisLine()
         axisLine2.axisLineIndex = 30
         axisLine2.labelText = "⭐️ Lap 2"
         axisLine2.axisLabelPosition = .topRight
         
-
+        graphView.leftmostPointPadding = 350
         graphView.shouldAnimateOnStartup = false
         graphView.addPlot(plot: linePlot)
         graphView.addPlot(plot: orangeLinePlot)

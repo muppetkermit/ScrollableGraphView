@@ -9,7 +9,7 @@ internal protocol ScrollableGraphViewDrawingDelegate : class {
     func paddingForPoints() -> (leftmostPointPadding: CGFloat, rightmostPointPadding: CGFloat)
     func calculatePosition(atIndex index: Int, value: Double) -> CGPoint
     func calculateAxisPosition(atIndex index: Int, lineType: LinePositioningType) -> (start:CGPoint, end:CGPoint)
-    func calculateAxisPositionForRelativeLabels(atIndex index: Int) -> [LabelInfo]
+    func calculateAxisPositionForRelativeLabels(atIndex index: Int, axisLineAbsoluteRatio: CGFloat) -> [LabelInfo]
 //    func calculateAxisPositionForRelativeLabels(atIndex index: Int) -> [(point: GraphPoint, value: Double)]?
     func currentViewport() -> CGRect
     func updatePaths()

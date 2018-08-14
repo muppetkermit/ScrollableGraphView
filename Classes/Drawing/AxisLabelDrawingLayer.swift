@@ -42,7 +42,7 @@ internal class AxisLabelDrawingLayer: ScrollableGraphViewDrawingLayer {
             let endPoint = owner?.graphPoint(forIndex: lineIndex+1) else {
                 return
         }
-
+        print(startPoint.location, endPoint.location)
         switch labelPosition {
         case .relativeLeft, .relativeRight:
             labelTexts = owner?.graphKeyPoints(forIndex: lineIndex) ?? []
@@ -57,6 +57,7 @@ internal class AxisLabelDrawingLayer: ScrollableGraphViewDrawingLayer {
             let text = labelTexts[index].text
             let label = labels[index]
             let y = CGFloat(labelTexts[index].point.y)
+            label.text = text
             label.layer.frame = findLabelPosition(forText: text, startPoint: startPoint, endPoint: endPoint, relativeY: y)
         }
     }
