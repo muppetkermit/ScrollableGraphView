@@ -8,8 +8,8 @@ internal class LineDrawingLayer : ScrollableGraphViewDrawingLayer {
     private var lineStyle: ScrollableGraphViewLineStyle
     private var shouldFill: Bool
     private var lineCurviness: CGFloat
-    
-    init(frame: CGRect, lineWidth: CGFloat, lineColor: UIColor, lineStyle: ScrollableGraphViewLineStyle, lineJoin: String, lineCap: String, shouldFill: Bool, lineCurviness: CGFloat) {
+
+    init(frame: CGRect, lineWidth: CGFloat, lineColor: UIColor, lineStyle: ScrollableGraphViewLineStyle, lineJoin: String = kCALineJoinRound, lineCap: String = kCALineCapRound, shouldFill: Bool = false, lineCurviness: CGFloat = 0) {
         
         self.lineStyle = lineStyle
         self.shouldFill = shouldFill
@@ -46,8 +46,12 @@ internal class LineDrawingLayer : ScrollableGraphViewDrawingLayer {
         
         let pathSegmentAdder = lineStyle == .straight ? addStraightLineSegment : addCurvedLineSegment
         
-        let activePointsInterval = delegate.intervalForActivePoints()
-        
+        var activePointsInterval = delegate.intervalForActivePoints()
+
+        if case LinePositioningType.absolute = linePositionType {
+            activePointsInterval = delegate.intervalForAbsolutePoints()
+        }
+
         let pointPadding = delegate.paddingForPoints()
         
         let min = delegate.rangeForActivePoints().min
@@ -60,43 +64,50 @@ internal class LineDrawingLayer : ScrollableGraphViewDrawingLayer {
         // Connect the line to the starting edge if we are filling it.
         if(shouldFill) {
             // Add a line from the base of the graph to the first data point.
-            let firstDataPoint = owner.graphPoint(forIndex: activePointsInterval.lowerBound)
-            
-            let viewportLeftZero = CGPoint(x: firstDataPoint.location.x - (pointPadding.leftmostPointPadding), y: zeroYPosition)
-            let leftFarEdgeTop = CGPoint(x: firstDataPoint.location.x - (pointPadding.leftmostPointPadding + viewportWidth), y: zeroYPosition)
-            let leftFarEdgeBottom = CGPoint(x: firstDataPoint.location.x - (pointPadding.leftmostPointPadding + viewportWidth), y: viewportHeight)
-            
-            currentLinePath.move(to: leftFarEdgeBottom)
-            pathSegmentAdder(leftFarEdgeBottom, leftFarEdgeTop, currentLinePath)
-            pathSegmentAdder(leftFarEdgeTop, viewportLeftZero, currentLinePath)
-            pathSegmentAdder(viewportLeftZero, CGPoint(x: firstDataPoint.location.x, y: firstDataPoint.location.y), currentLinePath)
+            if let firstDataPoint = owner.graphPoint(forIndex: activePointsInterval.lowerBound) {
+                let viewportLeftZero = CGPoint(x: firstDataPoint.location.x - (pointPadding.leftmostPointPadding), y: zeroYPosition)
+                let leftFarEdgeTop = CGPoint(x: firstDataPoint.location.x - (pointPadding.leftmostPointPadding + viewportWidth), y: zeroYPosition)
+                let leftFarEdgeBottom = CGPoint(x: firstDataPoint.location.x - (pointPadding.leftmostPointPadding + viewportWidth), y: viewportHeight)
+
+                currentLinePath.move(to: leftFarEdgeBottom)
+                pathSegmentAdder(leftFarEdgeBottom, leftFarEdgeTop, currentLinePath)
+                pathSegmentAdder(leftFarEdgeTop, viewportLeftZero, currentLinePath)
+                pathSegmentAdder(viewportLeftZero, CGPoint(x: firstDataPoint.location.x, y: firstDataPoint.location.y), currentLinePath)
+            }
         }
         else {
-            let firstDataPoint = owner.graphPoint(forIndex: activePointsInterval.lowerBound)
-            currentLinePath.move(to: firstDataPoint.location)
+            if let firstDataPoint = owner.graphPoint(forIndex: activePointsInterval.lowerBound) {
+                currentLinePath.move(to: firstDataPoint.location)
+            }
+
+            if let moveTo = owner.graphMove() {
+                currentLinePath.move(to: moveTo.location)
+            }
         }
-        
+
         // Connect each point on the graph with a segment.
-        for i in activePointsInterval.lowerBound ..< activePointsInterval.upperBound - 1 {
-            
-            let startPoint = owner.graphPoint(forIndex: i).location
-            let endPoint = owner.graphPoint(forIndex: i+1).location
-            
+        for i in activePointsInterval.lowerBound ..< activePointsInterval.upperBound {
+
+            guard let startPoint = owner.graphPoint(forIndex: i)?.location ,
+                let endPoint = owner.graphPoint(forIndex: i+1)?.location else {
+                continue
+            }
             pathSegmentAdder(startPoint, endPoint, currentLinePath)
         }
+
         
         // Connect the line to the ending edge if we are filling it.
         if(shouldFill) {
             // Add a line from the last data point to the base of the graph.
-            let lastDataPoint = owner.graphPoint(forIndex: activePointsInterval.upperBound - 1).location
-            
-            let viewportRightZero = CGPoint(x: lastDataPoint.x + (pointPadding.rightmostPointPadding), y: zeroYPosition)
-            let rightFarEdgeTop = CGPoint(x: lastDataPoint.x + (pointPadding.rightmostPointPadding + viewportWidth), y: zeroYPosition)
-            let rightFarEdgeBottom = CGPoint(x: lastDataPoint.x + (pointPadding.rightmostPointPadding + viewportWidth), y: viewportHeight)
-            
-            pathSegmentAdder(lastDataPoint, viewportRightZero, currentLinePath)
-            pathSegmentAdder(viewportRightZero, rightFarEdgeTop, currentLinePath)
-            pathSegmentAdder(rightFarEdgeTop, rightFarEdgeBottom, currentLinePath)
+            if let lastDataPoint = owner.graphPoint(forIndex: activePointsInterval.upperBound - 1)?.location {
+                let viewportRightZero = CGPoint(x: lastDataPoint.x + (pointPadding.rightmostPointPadding), y: zeroYPosition)
+                let rightFarEdgeTop = CGPoint(x: lastDataPoint.x + (pointPadding.rightmostPointPadding + viewportWidth), y: zeroYPosition)
+                let rightFarEdgeBottom = CGPoint(x: lastDataPoint.x + (pointPadding.rightmostPointPadding + viewportWidth), y: viewportHeight)
+
+                pathSegmentAdder(lastDataPoint, viewportRightZero, currentLinePath)
+                pathSegmentAdder(viewportRightZero, rightFarEdgeTop, currentLinePath)
+                pathSegmentAdder(rightFarEdgeTop, rightFarEdgeBottom, currentLinePath)
+            }
         }
         
         return currentLinePath

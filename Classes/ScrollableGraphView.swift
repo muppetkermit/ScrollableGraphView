@@ -24,7 +24,7 @@ import UIKit
     /// How far the first point on the graph should be placed from the left hand side of the view.
     @IBInspectable open var leftmostPointPadding: CGFloat = 50
     /// How far the final point on the graph should be placed from the right hand side of the view.
-    @IBInspectable open var rightmostPointPadding: CGFloat = 50
+    @IBInspectable open var rightmostPointPadding: CGFloat = 350
     /// How much space should be between each data point.
     @IBInspectable open var dataPointSpacing: CGFloat = 40
     
@@ -62,7 +62,7 @@ import UIKit
     
     // Reference Line Settings
     // #######################
-    
+
     var referenceLines: ReferenceLines? = nil
     
     // MARK: - Private State
@@ -87,6 +87,7 @@ import UIKit
     // Graph Drawing
     private var drawingView = UIView()
     private var plots: [Plot] = [Plot]()
+    private var axisLines: [AxisLine] = [AxisLine]()
     
     // Reference Lines
     private var referenceLineView: ReferenceLineDrawingView?
@@ -108,8 +109,18 @@ import UIKit
     private var previousActivePointsInterval: CountableRange<Int> = -1 ..< -1
     private var activePointsInterval: CountableRange<Int> = -1 ..< -1 {
         didSet {
-            if(oldValue.lowerBound != activePointsInterval.lowerBound || oldValue.upperBound != activePointsInterval.upperBound) {
+            if actualPointsIntervalChanged {
+                actualPointsIntervalChanged = false
                 if !isCurrentlySettingUp { activePointsDidChange() }
+            }
+        }
+    }
+    
+    private var actualPointsIntervalChanged: Bool = false
+    private var actualPointsInterval: CountableRange<Int> = -1 ..< -1 {
+        didSet {
+            if(oldValue.lowerBound != actualPointsInterval.lowerBound || oldValue.upperBound != actualPointsInterval.upperBound) {
+                actualPointsIntervalChanged = true
             }
         }
     }
@@ -249,8 +260,17 @@ import UIKit
         if(referenceLines != nil) {
             addReferenceViewDrawingView()
         }
-        
+
         // 7.
+        // Add the plots to the graph, we need these to calculate the range.
+
+        while(queuedAxis.count > 0) {
+            if let axis = queuedAxis.dequeue() {
+                addAxisLinesToGraph(axisLine: axis)
+            }
+        }
+
+        // 8.
         // We're now done setting up, update the offsets and change the flag.
         
         updateOffsetWidths()
@@ -382,12 +402,27 @@ import UIKit
     private func updateOffsetWidths() {
         drawingView.frame.origin.x = offsetWidth
         drawingView.bounds.origin.x = offsetWidth
-        
+
+        updateAbsoluteFrames(offsetWidth: offsetWidth)
         updateOffsetsForGradients(offsetWidth: offsetWidth)
         
         referenceLineView?.frame.origin.x = offsetWidth
     }
-    
+
+    private func updateAbsoluteFrames(offsetWidth: CGFloat) {
+        guard let sublayers = drawingView.layer.sublayers else {
+            return
+        }
+
+        for layer in sublayers {
+            if let layer = layer as? ScrollableGraphViewDrawingLayer {
+                if case LinePositioningType.absolute = layer.linePositionType {
+                    layer.absoluteOffset = offsetWidth
+                }
+            }
+        }
+    }
+
     private func updateOffsetsForGradients(offsetWidth: CGFloat) {
         guard let sublayers = drawingView.layer.sublayers else {
             return
@@ -445,7 +480,15 @@ import UIKit
             addPlotToGraph(plot: plot, activePointsInterval: self.activePointsInterval)
         }
     }
-    
+
+    public func addAxisLine(axisLine: AxisLine) {
+        if(isInitialSetup) {
+            enqueueAxis(axisLine)
+        }else {
+            addAxisLinesToGraph(axisLine: axisLine)
+        }
+    }
+
     public func addReferenceLines(referenceLines: ReferenceLines) {
         
         // If we aren't setup yet, just save the reference lines and the setup will take care of it.
@@ -481,11 +524,18 @@ import UIKit
         initPlot(plot: plot, activePointsInterval: activePointsInterval)
         startAnimations(withStaggerValue: 0.15)
     }
-    
+
+    private func addAxisLinesToGraph(axisLine: AxisLine) {
+        axisLine.graphViewDrawingDelegate = self
+        self.axisLines.append(axisLine)
+        axisLine.setup()
+        addSubLayers(layers: axisLine.layers(forViewport: currentViewport()))
+    }
+
     private func addReferenceLinesToGraph(referenceLines: ReferenceLines) {
         self.referenceLines = referenceLines
         addReferenceViewDrawingView()
-        
+
         updateLabelsForCurrentInterval()
     }
     
@@ -507,9 +557,13 @@ import UIKit
     }
 
     private var queuedPlots: SGVQueue<Plot> = SGVQueue<Plot>()
-    
+    private var queuedAxis: SGVQueue<AxisLine> = SGVQueue<AxisLine>()
+
     private func enqueuePlot(_ plot: Plot) {
         queuedPlots.enqueue(element: plot)
+    }
+    private func enqueueAxis(_ axis: AxisLine) {
+        queuedAxis.enqueue(element: axis)
     }
 
     
@@ -522,9 +576,17 @@ import UIKit
     private func calculateActivePointsInterval() -> CountableRange<Int> {
         
         // Calculate the "active points"
-        let min = Int((offsetWidth) / dataPointSpacing)
-        let max = Int(((offsetWidth + viewportWidth)) / dataPointSpacing)
-        
+        let min = Int(Double((offsetWidth - leftmostPointPadding) / dataPointSpacing).rounded())
+        let max = Int(Double(((offsetWidth + viewportWidth)) / dataPointSpacing).rounded())
+        print("-----")
+        print(offsetWidth - leftmostPointPadding)
+        print(dataPointSpacing)
+        print((offsetWidth - leftmostPointPadding) / dataPointSpacing)
+        print(min)
+        print("--+++--")
+        print(((offsetWidth + viewportWidth)) / dataPointSpacing)
+        print(max)
+        print("****")
         // Add and minus two so the path goes "off the screen" so we can't see where it ends.
         let minPossible = 0
         var maxPossible = 0
@@ -532,12 +594,13 @@ import UIKit
         if let numberOfPoints = dataSource?.numberOfPoints() {
             maxPossible = numberOfPoints - 1
         }
-        
+
+        actualPointsInterval = min ..< max
         let numberOfPointsOffscreen = 2
-        
         let actualMin = clamp(value: min - numberOfPointsOffscreen, min: minPossible, max: maxPossible)
         let actualMax = clamp(value: max + numberOfPointsOffscreen, min: minPossible, max: maxPossible)
-        
+        print("pp: \(minPossible) \(maxPossible)")
+        print("MIN: \(min) \(max) actial: \(actualMin) \(actualMax)")
         return actualMin..<actualMax.advanced(by: 1)
     }
     
@@ -749,6 +812,15 @@ import UIKit
             
             // The labels will also need to be repositioned if the viewport has changed.
             repositionActiveLabels()
+
+            // Scale Axis lines for new viewPort
+            repositionAxisLines()
+        }
+    }
+
+    private func repositionAxisLines() {
+        for line in axisLines {
+            line.updateLineLayer()
         }
     }
     
@@ -878,7 +950,44 @@ import UIKit
     
     // MARK: - Drawing Delegate
     // ########################
-    
+
+    internal func calculateAxisPositionForRelativeLabels(atIndex index: Int, axisLineAbsoluteRatio: CGFloat = 0) -> [LabelInfo] {
+        // Make sure we have data, if don't, just get out. We can't do anything without any data.
+        guard let dataSource = dataSource else {
+            return []
+        }
+        var infos = [LabelInfo]()
+
+        let offSetIndex = Int(Double((offsetWidth - leftmostPointPadding + viewportWidth * axisLineAbsoluteRatio) / dataPointSpacing).rounded())
+        print("offsets ",index, offSetIndex, offsetWidth)
+        for plot in plots {
+            if let info = dataSource.label(forPlot: plot, atIndex: offSetIndex) {
+                infos.append(info)
+            }
+        }
+        return infos
+    }
+
+    internal func calculateAxisPosition(atIndex index: Int, lineType: LinePositioningType = .relative) -> (start:CGPoint, end:CGPoint) {
+
+        // Calculate the position on in the view for the value specified.
+        var graphHeight = viewportHeight - topMargin - bottomMargin
+        if let ref = self.referenceLines {
+            if(ref.shouldShowLabels && ref.dataPointLabelFont != nil) {
+                graphHeight -= (ref.dataPointLabelFont!.pointSize + ref.dataPointLabelTopMargin + ref.dataPointLabelBottomMargin)
+            }
+        }
+
+        if case LinePositioningType.absolute = lineType {
+            return (CGPoint(x: 0, y: topMargin),CGPoint(x: viewportWidth, y: topMargin + graphHeight))
+        }
+
+        let x = (CGFloat(index) * dataPointSpacing) + leftmostPointPadding
+        let y = topMargin + graphHeight
+
+        return (CGPoint(x: x, y: topMargin),CGPoint(x: x, y: y))
+    }
+
     internal func calculatePosition(atIndex index: Int, value: Double) -> CGPoint {
         
         // Set range defaults based on settings:
@@ -907,10 +1016,26 @@ import UIKit
         
         let x = (CGFloat(index) * dataPointSpacing) + leftmostPointPadding
         let y = (CGFloat((value - rangeMax) / (rangeMin - rangeMax)) * graphHeight) + topMargin
-        
+        print("Dot: ",x,y)
         return CGPoint(x: x, y: y)
     }
-    
+
+    internal func intervalForAbsolutePoints() -> CountableRange<Int> {
+        var lowerbound = Int.max
+        var upperbound = Int.min
+        for line in self.axisLines {
+            if case LinePositioningType.absolute = line.axisLinePosition {
+                if (lowerbound > line.axisLineIndex) {
+                    lowerbound = line.axisLineIndex
+                }
+                if (upperbound < line.axisLineIndex) {
+                    upperbound = line.axisLineIndex + 1
+                }
+            }
+        }
+        return lowerbound ..< upperbound
+    }
+
     internal func intervalForActivePoints() -> CountableRange<Int> {
         return activePointsInterval
     }
