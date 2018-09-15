@@ -26,6 +26,9 @@
 		298BFD581F121BB00062F5C8 /* LabelPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 298BFD461F121BB00062F5C8 /* LabelPool.swift */; };
 		298BFD591F121BB00062F5C8 /* ReferenceLines.swift in Sources */ = {isa = PBXBuildFile; fileRef = 298BFD471F121BB00062F5C8 /* ReferenceLines.swift */; };
 		298BFD5A1F121BB00062F5C8 /* ScrollableGraphView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 298BFD481F121BB00062F5C8 /* ScrollableGraphView.swift */; };
+		56FF579E214D4BF000C7005E /* AxisLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56FF579C214D4BEF00C7005E /* AxisLine.swift */; };
+		56FF579F214D4BF000C7005E /* LabelInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56FF579D214D4BEF00C7005E /* LabelInfo.swift */; };
+		56FF57A1214D4C9B00C7005E /* AxisLabelDrawingLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56FF57A0214D4C9B00C7005E /* AxisLabelDrawingLayer.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -50,6 +53,9 @@
 		298BFD461F121BB00062F5C8 /* LabelPool.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LabelPool.swift; sourceTree = "<group>"; };
 		298BFD471F121BB00062F5C8 /* ReferenceLines.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReferenceLines.swift; sourceTree = "<group>"; };
 		298BFD481F121BB00062F5C8 /* ScrollableGraphView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScrollableGraphView.swift; sourceTree = "<group>"; };
+		56FF579C214D4BEF00C7005E /* AxisLine.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AxisLine.swift; sourceTree = "<group>"; };
+		56FF579D214D4BEF00C7005E /* LabelInfo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LabelInfo.swift; sourceTree = "<group>"; };
+		56FF57A0214D4C9B00C7005E /* AxisLabelDrawingLayer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AxisLabelDrawingLayer.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -92,6 +98,7 @@
 		298BFD311F121BB00062F5C8 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				56FF579B214D4BEF00C7005E /* Axis */,
 				298BFD321F121BB00062F5C8 /* Drawing */,
 				298BFD3A1F121BB00062F5C8 /* Plots */,
 				298BFD421F121BB00062F5C8 /* Protocols */,
@@ -105,6 +112,7 @@
 		298BFD321F121BB00062F5C8 /* Drawing */ = {
 			isa = PBXGroup;
 			children = (
+				56FF57A0214D4C9B00C7005E /* AxisLabelDrawingLayer.swift */,
 				298BFD331F121BB00062F5C8 /* BarDrawingLayer.swift */,
 				298BFD341F121BB00062F5C8 /* DotDrawingLayer.swift */,
 				298BFD351F121BB00062F5C8 /* FillDrawingLayer.swift */,
@@ -153,6 +161,15 @@
 				298BFD471F121BB00062F5C8 /* ReferenceLines.swift */,
 			);
 			path = Reference;
+			sourceTree = "<group>";
+		};
+		56FF579B214D4BEF00C7005E /* Axis */ = {
+			isa = PBXGroup;
+			children = (
+				56FF579C214D4BEF00C7005E /* AxisLine.swift */,
+				56FF579D214D4BEF00C7005E /* LabelInfo.swift */,
+			);
+			path = Axis;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -240,11 +257,14 @@
 				298BFD571F121BB00062F5C8 /* ScrollableGraphViewDrawingDelegate.swift in Sources */,
 				298BFD581F121BB00062F5C8 /* LabelPool.swift in Sources */,
 				298BFD4C1F121BB00062F5C8 /* GradientDrawingLayer.swift in Sources */,
+				56FF579E214D4BF000C7005E /* AxisLine.swift in Sources */,
 				298BFD4A1F121BB00062F5C8 /* DotDrawingLayer.swift in Sources */,
 				298BFD521F121BB00062F5C8 /* BarPlot.swift in Sources */,
 				298BFD4B1F121BB00062F5C8 /* FillDrawingLayer.swift in Sources */,
+				56FF579F214D4BF000C7005E /* LabelInfo.swift in Sources */,
 				298BFD4D1F121BB00062F5C8 /* LineDrawingLayer.swift in Sources */,
 				298BFD491F121BB00062F5C8 /* BarDrawingLayer.swift in Sources */,
+				56FF57A1214D4C9B00C7005E /* AxisLabelDrawingLayer.swift in Sources */,
 				298BFD4F1F121BB00062F5C8 /* ScrollableGraphViewDrawingLayer.swift in Sources */,
 				298BFD4E1F121BB00062F5C8 /* ReferenceLineDrawingView.swift in Sources */,
 				298BFD591F121BB00062F5C8 /* ReferenceLines.swift in Sources */,

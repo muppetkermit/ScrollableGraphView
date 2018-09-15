@@ -8,22 +8,40 @@
 import UIKit
 
 public struct LabelInfo {
-    struct Style {
-        enum CornerType {
+    public struct Style {
+        public enum CornerType {
             case normal
             case rounded(radius: Int)
         }
-        let cornerType: CornerType
-        let backgroundColor: UIColor
-        let labelColor: UIColor
-        let size: CGSize?
-        let font: UIFont
+        public let cornerType: CornerType
+        public let backgroundColor: UIColor
+        public let labelColor: UIColor
+        public let size: CGSize?
+        public let font: UIFont
+        
+        public init(cornerType: CornerType, backgroundColor: UIColor, labelColor: UIColor,
+                    size: CGSize?, font: UIFont) {
+            self.cornerType = cornerType
+            self.backgroundColor = backgroundColor
+            self.labelColor = labelColor
+            self.size = size
+            self.font = font
+        }
     }
     
-    var text: String
-    var value: Double
-    var style: Style
-    var point: CGPoint
-    var position: ScrollableGraphViewAxisLabelPosition
+    public var text: String
+    public var value: Double
+    public var style: Style
+    public var point: CGPoint
+    public var position: ScrollableGraphViewAxisLabelPosition
 
+    public init(text: String, value: Double, style: Style,
+                point: CGPoint, position: ScrollableGraphViewAxisLabelPosition) {
+        self.text = text
+        self.value = value
+        self.style = style
+        self.point = point
+        self.position = position
+    }
 }
+

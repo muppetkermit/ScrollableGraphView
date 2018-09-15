@@ -235,7 +235,7 @@ open class Plot: GraphPlot {
         displayLink?.invalidate()
     }
     
-    internal func graphPoint(forIndex index: Int) -> GraphPoint? {
+    open func graphPoint(forIndex index: Int) -> GraphPoint? {
         if index >= graphPoints.count || index < 0 {
             return nil
         }

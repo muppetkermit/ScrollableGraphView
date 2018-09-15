@@ -40,7 +40,7 @@ open class AxisLine: GraphPlot {
     open var axisLinePosition = LinePositioningType.relative
 
     /// axis line absolute position ratio
-    @IBInspectable var axisLineAbsoluteRatio: CGFloat = 0
+    @IBInspectable open var axisLineAbsoluteRatio: CGFloat = 0
 
     /// How each segment in the line should connect. Takes any of the Core Animation LineJoin values.
     open var lineJoin: String = kCALineJoinRound
@@ -98,6 +98,8 @@ open class AxisLine: GraphPlot {
         createAxisPoints()
         _ = lineLayer?.createLinePath()
     }
+
+    public init() { }
 
     private func createAxisPoints() {
         let positions = graphViewDrawingDelegate.calculateAxisPosition(atIndex: axisLineIndex, lineType: axisLinePosition)
