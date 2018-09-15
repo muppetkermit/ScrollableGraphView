@@ -1,13 +1,21 @@
 
 import UIKit
 
-open class Plot {
-    
+protocol GraphPlot: class {
+    func graphPoint(forIndex index: Int) -> GraphPoint?
+    func graphMove() -> GraphPoint?
+    func graphKeyPoints(forIndex index: Int) -> [LabelInfo]
+    var graphViewDrawingDelegate: ScrollableGraphViewDrawingDelegate! {get set}
+    var identifier: String! {get set}
+}
+
+open class Plot: GraphPlot {
+
     // The id for this plot. Used when determining which data to give it in the dataSource
     open var identifier: String!
     
     weak var graphViewDrawingDelegate: ScrollableGraphViewDrawingDelegate! = nil
-    
+
     // Animation Settings
     // ##################
     
@@ -227,8 +235,20 @@ open class Plot {
         displayLink?.invalidate()
     }
     
-    internal func graphPoint(forIndex index: Int) -> GraphPoint {
+    internal func graphPoint(forIndex index: Int) -> GraphPoint? {
+        if index >= graphPoints.count || index < 0 {
+            return nil
+        }
         return graphPoints[index]
+    }
+
+    internal func graphKeyPoints(forIndex index: Int) -> [LabelInfo] {
+        return []
+    }
+
+    // move path for single lines.
+    func graphMove() -> GraphPoint? {
+        return nil
     }
 }
 
