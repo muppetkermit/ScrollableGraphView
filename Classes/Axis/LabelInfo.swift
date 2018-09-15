@@ -16,11 +16,14 @@ public struct LabelInfo {
         let cornerType: CornerType
         let backgroundColor: UIColor
         let labelColor: UIColor
+        let size: CGSize?
+        let font: UIFont
     }
     
     var text: String
     var value: Double
     var style: Style
     var point: CGPoint
+    var position: ScrollableGraphViewAxisLabelPosition
 
 }

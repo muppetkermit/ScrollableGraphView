@@ -62,8 +62,8 @@ open class AxisLine: GraphPlot {
     @IBInspectable open var labelText: String = "Axis"
     public var labelInfo = LabelInfo(text: "",
                                      value: 0,
-                                     style: LabelInfo.Style(cornerType: .normal, backgroundColor: UIColor.clear, labelColor: UIColor.black),
-                                     point: CGPoint.zero)
+                                     style: LabelInfo.Style(cornerType: .normal, backgroundColor: UIColor.clear, labelColor: UIColor.black, size: nil, font: UIFont.systemFont(ofSize: 12)),
+                                     point: CGPoint.zero, position: .middleLeft)
 
     @IBInspectable var axisLabelPosition_: Int {
         get { return axisLabelPosition.rawValue }
@@ -117,7 +117,7 @@ open class AxisLine: GraphPlot {
 
         if shouldShowLabels {
             labelInfo.text = labelText
-            labelLayer = AxisLabelDrawingLayer(frame: viewport, labels:[labelInfo] , lineIndex: axisLineIndex, color: dataPointLabelColor, font: dataPointLabelFont, position: axisLabelPosition)
+            labelLayer = AxisLabelDrawingLayer(frame: viewport, labels:[labelInfo] , lineIndex: axisLineIndex, color: dataPointLabelColor, font: dataPointLabelFont)
             labelLayer?.linePositionType = axisLinePosition
             labelLayer?.owner = self
         }
@@ -149,4 +149,6 @@ open class AxisLine: GraphPlot {
     case bottomRight
     case relativeLeft
     case relativeRight
+    case middleLeft
+    case middleRight
 }

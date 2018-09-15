@@ -13,8 +13,7 @@ internal class AxisLabelDrawingLayer: ScrollableGraphViewDrawingLayer {
     // ##################
 
     private var labelMarginTopBottom: CGFloat = 4
-    private var labelSideInset: CGFloat = 10
-    private var labelPosition: ScrollableGraphViewAxisLabelPosition = .topLeft
+    private var labelSideInset: CGFloat = 0.5
     private var labelColor: UIColor = UIColor.black
     private var labelFont: UIFont = UIFont.systemFont(ofSize: 10)
     private var lineIndex: Int = 0
@@ -22,12 +21,11 @@ internal class AxisLabelDrawingLayer: ScrollableGraphViewDrawingLayer {
     private var labels = [UILabel]()
     private var labelTexts = [LabelInfo]()
 
-    init(frame: CGRect, labels:[LabelInfo], lineIndex: Int, color: UIColor, font: UIFont, position: ScrollableGraphViewAxisLabelPosition = .topLeft) {
+    init(frame: CGRect, labels:[LabelInfo], lineIndex: Int, color: UIColor, font: UIFont) {
         super.init(viewportWidth: frame.size.width, viewportHeight: frame.size.height)
         
-        self.labelPosition = position
         self.lineIndex = lineIndex
-
+        self.labelColor = color
         self.labelTexts = labels
 
         generateLabels()
@@ -42,23 +40,23 @@ internal class AxisLabelDrawingLayer: ScrollableGraphViewDrawingLayer {
             let endPoint = owner?.graphPoint(forIndex: lineIndex+1) else {
                 return
         }
+
         print(startPoint.location, endPoint.location)
-        switch labelPosition {
-        case .relativeLeft, .relativeRight:
-            labelTexts = owner?.graphKeyPoints(forIndex: lineIndex) ?? []
-            if labelTexts.count != labels.count {
-                generateLabels()
-            }
-        default:
-            break
+        labelTexts = owner?.graphKeyPoints(forIndex: lineIndex) ?? []
+        if labelTexts.count != labels.count {
+            generateLabels()
         }
 
         for index in 0..<labelTexts.count {
             let text = labelTexts[index].text
             let label = labels[index]
             let y = CGFloat(labelTexts[index].point.y)
+            let middleY = (label.layer.superlayer?.frame.height ?? 0) / 2
             label.text = text
-            label.layer.frame = findLabelPosition(forText: text, startPoint: startPoint, endPoint: endPoint, relativeY: y)
+            label.textColor = labelTexts[index].style.labelColor
+            label.backgroundColor = labelTexts[index].style.backgroundColor
+            label.font = labelTexts[index].style.font
+            label.layer.frame = findLabelPosition(forText: text, startPoint: startPoint, endPoint: endPoint, relativeY: y, middleY: middleY, size: labelTexts[index].style.size, labelPosition: labelTexts[index].position)
         }
     }
 
@@ -87,8 +85,13 @@ internal class AxisLabelDrawingLayer: ScrollableGraphViewDrawingLayer {
         return label
     }
 
-    private func findLabelPosition(forText text: String, startPoint: GraphPoint, endPoint: GraphPoint, relativeY: CGFloat = 0) -> CGRect {
-        let boundingSize = self.boundingSize(forText: text)
+    private func findLabelPosition(forText text: String, startPoint: GraphPoint, endPoint: GraphPoint, relativeY: CGFloat = 0, middleY: CGFloat = 0, size: CGSize? = nil, labelPosition: ScrollableGraphViewAxisLabelPosition) -> CGRect {
+        var boundingSize: CGSize!
+        if size == nil {
+            boundingSize = self.boundingSize(forText: text)
+        } else {
+            boundingSize = size
+        }
 
         var origin: CGPoint = CGPoint.zero
         switch labelPosition {
@@ -104,7 +107,10 @@ internal class AxisLabelDrawingLayer: ScrollableGraphViewDrawingLayer {
             origin = CGPoint(x: endPoint.x - labelSideInset - boundingSize.width, y: relativeY - boundingSize.height/2)
         case .relativeRight:
             origin = CGPoint(x: endPoint.x + labelSideInset, y: relativeY - boundingSize.height/2)
-
+        case .middleLeft:
+            origin = CGPoint(x: endPoint.x - boundingSize.width - labelSideInset, y: middleY - boundingSize.height/2)
+        case .middleRight:
+            origin = CGPoint(x: endPoint.x + labelSideInset, y: middleY - boundingSize.height/2)
         }
         return CGRect(origin: origin, size: boundingSize)
     }
