@@ -41,7 +41,6 @@ internal class AxisLabelDrawingLayer: ScrollableGraphViewDrawingLayer {
                 return
         }
 
-        print(startPoint.location, endPoint.location)
         labelTexts = owner?.graphKeyPoints(forIndex: lineIndex) ?? []
         if labelTexts.count != labels.count {
             generateLabels()

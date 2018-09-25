@@ -578,15 +578,7 @@ import UIKit
         // Calculate the "active points"
         let min = Int(Double((offsetWidth - leftmostPointPadding) / dataPointSpacing).rounded())
         let max = Int(Double(((offsetWidth + viewportWidth)) / dataPointSpacing).rounded())
-        print("-----")
-        print(offsetWidth - leftmostPointPadding)
-        print(dataPointSpacing)
-        print((offsetWidth - leftmostPointPadding) / dataPointSpacing)
-        print(min)
-        print("--+++--")
-        print(((offsetWidth + viewportWidth)) / dataPointSpacing)
-        print(max)
-        print("****")
+
         // Add and minus two so the path goes "off the screen" so we can't see where it ends.
         let minPossible = 0
         var maxPossible = 0
@@ -599,8 +591,6 @@ import UIKit
         let numberOfPointsOffscreen = 2
         let actualMin = clamp(value: min - numberOfPointsOffscreen, min: minPossible, max: maxPossible)
         let actualMax = clamp(value: max + numberOfPointsOffscreen, min: minPossible, max: maxPossible)
-        print("pp: \(minPossible) \(maxPossible)")
-        print("MIN: \(min) \(max) actial: \(actualMin) \(actualMax)")
         return actualMin..<actualMax.advanced(by: 1)
     }
     
@@ -959,7 +949,6 @@ import UIKit
         var infos = [LabelInfo]()
 
         let offSetIndex = Int(Double((offsetWidth - leftmostPointPadding + viewportWidth * axisLineAbsoluteRatio) / dataPointSpacing).rounded())
-        print("offsets ",index, offSetIndex, offsetWidth)
         for plot in plots {
             if let info = dataSource.label(forPlot: plot, atIndex: offSetIndex) {
                 infos.append(info)
@@ -1016,7 +1005,7 @@ import UIKit
         
         let x = (CGFloat(index) * dataPointSpacing) + leftmostPointPadding
         let y = (CGFloat((value - rangeMax) / (rangeMin - rangeMax)) * graphHeight) + topMargin
-        print("Dot: ",x,y)
+
         return CGPoint(x: x, y: y)
     }
 
