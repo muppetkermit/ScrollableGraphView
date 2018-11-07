@@ -7,6 +7,7 @@ import UIKit
 
 class ViewController: UIViewController, ScrollableGraphViewDataSource {
 
+
     var graphView: ScrollableGraphView!
     var currentGraphType = GraphType.multiOne
     var graphConstraints = [NSLayoutConstraint]()
@@ -51,6 +52,10 @@ class ViewController: UIViewController, ScrollableGraphViewDataSource {
     
     // Implementation for ScrollableGraphViewDataSource protocol
     // #########################################################
+
+    func label(forPlot plot: Plot, atIndex pointIndex: Int) -> LabelInfo? {
+        return nil
+    }
     
     // You would usually only have a couple of cases here, one for each
     // plot you want to display on the graph. However as this is showing
@@ -113,9 +118,26 @@ class ViewController: UIViewController, ScrollableGraphViewDataSource {
         let graphView = ScrollableGraphView(frame: frame, dataSource: self)
         
         let linePlot = LinePlot(identifier: "simple") // Identifier should be unique for each plot.
+
+        // Setup the second plot.
+        let orangeLinePlot = LinePlot(identifier: "multiOrange")
+
+        orangeLinePlot.lineColor = UIColor.colorFromHex(hexString: "#ff7d78")
+        orangeLinePlot.adaptAnimationType = ScrollableGraphViewAnimationType.elastic
+
+        // squares on the line
+        let orangeSquarePlot = DotPlot(identifier: "multiOrangeSquare")
+        orangeSquarePlot.dataPointType = ScrollableGraphViewDataPointType.square
+        orangeSquarePlot.dataPointSize = 5
+        orangeSquarePlot.dataPointFillColor = UIColor.colorFromHex(hexString: "#ff7d78")
+
+        orangeSquarePlot.adaptAnimationType = ScrollableGraphViewAnimationType.elastic
+
         let referenceLines = ReferenceLines()
-        
+//        referenceLines.shouldShowLabels = false
+
         graphView.addPlot(plot: linePlot)
+        graphView.addPlot(plot: orangeLinePlot)
         graphView.addReferenceLines(referenceLines: referenceLines)
         
         return graphView
@@ -173,7 +195,7 @@ class ViewController: UIViewController, ScrollableGraphViewDataSource {
         graphView.dataPointSpacing = 80
         
         graphView.shouldAnimateOnStartup = true
-        graphView.shouldAdaptRange = true
+//        graphView.shouldAdaptRange = true
         graphView.shouldRangeAlwaysStartAtZero = true
         
         // Add everything to the graph.
